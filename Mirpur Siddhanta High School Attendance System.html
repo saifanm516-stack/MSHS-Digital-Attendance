@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirpur Siddhanta High School - Official Attendance Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f4ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-600 selection:text-white">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-brand-900 text-white shadow-md sticky top-0 z-40 border-b border-brand-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-11 h-11 rounded-xl bg-white p-0.5 shadow-sm overflow-hidden flex items-center justify-center border border-brand-700">
+                    <img src="40657.jpg" alt="Mirpur Siddhanta High School Logo" class="w-full h-full object-cover rounded-lg" onerror="this.src='https://placehold.co/100x100/1e3a8a/ffffff?text=MSHS'">
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold tracking-tight">Mirpur Siddhanta High School</h1>
+                    <p class="text-xs text-brand-100 font-medium">Established 1996 • Dhaka-1216</p>
+                </div>
+            </div>
+            <nav class="flex items-center space-x-2 bg-brand-950/60 p-1.5 rounded-xl border border-brand-800">
+                <button onclick="switchTab('parent')" id="btnParentTab" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-brand-900 shadow-sm transition-all">Parent Portal</button>
+                <button onclick="switchTab('teacher')" id="btnTeacherTab" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-brand-100 hover:text-white hover:bg-brand-800/50 transition-all">Teacher Panel</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- ================= PARENT PORTAL ================= -->
+        <section id="parentSection" class="fade-in space-y-6">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 relative overflow-hidden">
+                <div class="max-w-2xl mx-auto text-center space-y-3 relative z-10">
+                    <span class="inline-block bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Live Student Attendance Verification</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">Parent Attendance Portal</h2>
+                    <p class="text-sm text-slate-500">Search by student name, roll number, ID number, or phone number to check daily records.</p>
+                    <div class="flex flex-col sm:flex-row gap-3 pt-3">
+                        <div class="relative flex-grow">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">🔍</span>
+                            <input type="text" id="parentSearchInput" placeholder="Search by name, roll, ID, or phone number..." class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white text-sm transition" oninput="searchStudentForParent()">
+                        </div>
+                        <button onclick="searchStudentForParent()" class="bg-brand-600 hover:bg-brand-700 active:scale-95 text-white px-6 py-3.5 rounded-2xl text-sm font-semibold transition shadow-sm">
+                            Search Record
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent Table Card -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Student Attendance Directory</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Active Date Register: <span id="currentDateDisplay" class="font-semibold text-brand-700"></span></p>
+                    </div>
+                    <button onclick="loadAttendanceData()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl font-medium transition flex items-center space-x-1.5">
+                        <span>🔄 Refresh Status</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                                <th class="py-3 px-3">ID Number</th>
+                                <th class="py-3 px-3">Roll Number</th>
+                                <th class="py-3 px-3">Student Name</th>
+                                <th class="py-3 px-3">Class</th>
+                                <th class="py-3 px-3">Section / Group</th>
+                                <th class="py-3 px-3">Phone Number</th>
+                                <th class="py-3 px-3">Attendance Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parentStudentTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TEACHER PANEL ================= -->
+        <section id="teacherSection" class="hidden fade-in space-y-6">
+            
+            <!-- Login Card -->
+            <div id="teacherLoginCard" class="max-w-md mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-200 mt-8">
+                <div class="text-center space-y-2 mb-8">
+                    <div class="inline-flex bg-brand-50 text-brand-700 p-4 rounded-2xl text-3xl mb-1 shadow-sm">🔐</div>
+                    <h2 class="text-2xl font-bold text-slate-900">Teacher Panel Login</h2>
+                    <p class="text-xs text-slate-400">Enter secure password to access administration controls</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Password</label>
+                        <input type="password" id="teacherPasswordInput" placeholder="Password" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white text-sm transition" onkeydown="if(event.key === 'Enter') verifyTeacherLogin()">
+                    </div>
+                    <button onclick="verifyTeacherLogin()" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-95 text-white py-3.5 rounded-2xl text-sm font-semibold transition shadow-md">Unlock Dashboard</button>
+                </div>
+            </div>
+
+            <!-- Teacher Dashboard -->
+            <div id="teacherDashboard" class="hidden space-y-6">
+                <div class="flex flex-wrap justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-200 gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-brand-50 text-brand-700 rounded-2xl flex items-center justify-center font-bold text-lg">👨‍🏫</div>
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">Teacher Administration Console</h2>
+                            <p class="text-xs text-slate-400">Manage student records from Play to Class 10 and update daily attendance logs</p>
+                        </div>
+                    </div>
+                    <button onclick="logoutTeacher()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl text-xs font-semibold transition flex items-center space-x-1.5">
+                        <span>🔒 Lock Panel</span>
+                    </button>
+                </div>
+
+                <!-- Add / Edit Student Form (Strict Serial Order) -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="formTitleText" class="text-md font-bold text-slate-900 flex items-center space-x-2">
+                            <span>➕ Add New Student</span>
+                        </h3>
+                        <button id="cancelEditBtn" onclick="resetStudentForm()" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl font-semibold transition">Cancel Edit</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+                        <!-- 1. ID Number -->
+                        <input type="text" id="newStudentId" placeholder="ID Number" class="px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white transition">
+                        <!-- 2. Roll Number -->
+                        <input type="text" id="newRoll" placeholder="Roll Number" class="px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white transition">
+                        <!-- 3. Student Name -->
+                        <input type="text" id="newName" placeholder="Student Name" class="px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white transition">
+                        <!-- 4. Class -->
+                        <select id="newClass" onchange="updateSectionDropdown()" class="px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white transition text-slate-700 font-medium">
+                            <option value="Play">Play</option>
+                            <option value="Nursery">Nursery</option>
+                            <option value="KG">KG</option>
+                            <option value="Class 1">Class 1</option>
+                            <option value="Class 2">Class 2</option>
+                            <option value="Class 3">Class 3</option>
+                            <option value="Class 4">Class 4</option>
+                            <option value="Class 5">Class 5</option>
+                            <option value="Class 6">Class 6</option>
+                            <option value="Class 7">Class 7</option>
+                            <option value="Class 8">Class 8</option>
+                            <option value="Class 9">Class 9</option>
+                            <option value="Class 10" selected>Class 10</option>
+                        </select>
+                        <!-- 5. Section / Group -->
+                        <select id="newSectionGroup" class="px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white transition text-slate-700 font-medium">
+                            <option value="Science">Science</option>
+                            <option value="Commerce">Commerce</option>
+                            <option value="Arts">Arts</option>
+                        </select>
+                        <!-- 6. Phone Number -->
+                        <input type="text" id="newPhone" placeholder="Phone Number" class="px-3.5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white transition">
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button id="submitStudentBtn" onclick="saveStudentRecord()" class="bg-brand-600 hover:bg-brand-700 active:scale-95 text-white px-6 py-3 rounded-2xl text-sm font-semibold transition shadow-sm">Register Student</button>
+                    </div>
+                </div>
+
+                <!-- Attendance Management Table -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Attendance Register</h3>
+                            <p class="text-xs text-slate-400">Mark students as Present (P) or Absent (A), edit details, or remove records.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <input type="date" id="attendanceDatepicker" class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 font-medium text-slate-700" onchange="loadAttendanceData()">
+                            <button onclick="saveAllAttendance()" class="bg-brand-600 hover:bg-brand-700 active:scale-95 text-white px-5 py-2.5 rounded-2xl text-sm font-semibold transition shadow-sm flex items-center space-x-1.5">
+                                <span>💾 Save Register</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                                    <th class="py-3 px-3">ID Number</th>
+                                    <th class="py-3 px-3">Roll Number</th>
+                                    <th class="py-3 px-3">Student Name</th>
+                                    <th class="py-3 px-3">Class</th>
+                                    <th class="py-3 px-3">Section / Group</th>
+                                    <th class="py-3 px-3">Phone Number</th>
+                                    <th class="py-3 px-3">Attendance (P / A)</th>
+                                    <th class="py-3 px-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacherStudentTableBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- CUSTOM CONFIRMATION MODAL -->
+    <div id="customConfirmModal" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200 fade-in">
+            <div class="w-12 h-12 bg-brand-50 text-brand-700 rounded-2xl flex items-center justify-center text-xl font-bold">⚠️</div>
+            <h3 class="text-lg font-bold text-slate-900">Confirm Deletion</h3>
+            <p id="confirmModalText" class="text-sm text-slate-500">Are you sure you want to remove this student? All attendance history will be permanently deleted.</p>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-2xl text-xs font-semibold transition">Cancel</button>
+                <button id="confirmModalYesBtn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-2xl text-xs font-semibold transition">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-auto text-center text-xs text-slate-500">
+        <p>&copy; 2026 Mirpur Siddhanta High School. All rights reserved. 5-Year Data Retention Active.</p>
+    </footer>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        // Initial dataset covering Play to Class 10 with strict serial fields: ID Number, Roll, Name, Class, Section/Group, Phone
+        const defaultStudents = [
+            { id: '1', studentId: 'ID-1001', roll: '101', name: 'Rahul Ahmed', classVal: 'Class 10', sectionGroup: 'Science', phone: '01711122233' },
+            { id: '2', studentId: 'ID-1002', roll: '102', name: 'Fatima Akter', classVal: 'Class 10', sectionGroup: 'Commerce', phone: '01822233344' },
+            { id: '3', studentId: 'ID-1003', roll: '103', name: 'Tanvir Hasan', classVal: 'Class 9', sectionGroup: 'Arts', phone: '01933344455' },
+            { id: '4', studentId: 'ID-1004', roll: '101', name: 'Anika Tabassum', classVal: 'Class 6', sectionGroup: 'Section A', phone: '01544455566' },
+            { id: '5', studentId: 'ID-1005', roll: '1', name: 'Arman Hossain', classVal: 'Play', sectionGroup: 'Section A', phone: '01655566677' }
+        ];
+
+        let editingStudentId = null;
+
+        function getTodayString() {
+            const d = new Date();
+            return d.toISOString().split('T')[0];
+        }
+
+        // 5-Year Data Retention Cleaner
+        function cleanupOldAttendance() {
+            const attendanceMap = JSON.parse(localStorage.getItem('mshs_attendance')) || {};
+            const fiveYearsAgo = new Date();
+            fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+
+            let updated = {};
+            for (const [dateStr, records] of Object.entries(attendanceMap)) {
+                const recordDate = new Date(dateStr);
+                if (recordDate >= fiveYearsAgo) {
+                    updated[dateStr] = records;
+                }
+            }
+            localStorage.setItem('mshs_attendance', JSON.stringify(updated));
+        }
+
+        // Initialize LocalStorage with retention check
+        if (!localStorage.getItem('mshs_students')) {
+            localStorage.setItem('mshs_students', JSON.stringify(defaultStudents));
+        }
+        if (!localStorage.getItem('mshs_attendance')) {
+            localStorage.setItem('mshs_attendance', JSON.stringify({}));
+        } else {
+            cleanupOldAttendance();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = getTodayString();
+            document.getElementById('attendanceDatepicker').value = today;
+            document.getElementById('currentDateDisplay').innerText = today;
+            loadAttendanceData();
+            updateSectionDropdown();
+        });
+
+        // Tab Switching
+        function switchTab(tab) {
+            const parentSec = document.getElementById('parentSection');
+            const teacherSec = document.getElementById('teacherSection');
+            const btnParent = document.getElementById('btnParentTab');
+            const btnTeacher = document.getElementById('btnTeacherTab');
+
+            parentSec.classList.add('hidden');
+            teacherSec.classList.add('hidden');
+            btnParent.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-all";
+            btnTeacher.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-all";
+
+            if (tab === 'parent') {
+                parentSec.classList.remove('hidden');
+                btnParent.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-brand-900 shadow-sm transition-all";
+                loadAttendanceData();
+            } else if (tab === 'teacher') {
+                teacherSec.classList.remove('hidden');
+                btnTeacher.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-brand-900 shadow-sm transition-all";
+            }
+        }
+
+        // Update Section/Group dropdown based on Class selection
+        function updateSectionDropdown() {
+            const classVal = document.getElementById('newClass').value;
+            const sectionSelect = document.getElementById('newSectionGroup');
+            const currentSelected = sectionSelect.value;
+            sectionSelect.innerHTML = "";
+
+            if (classVal === 'Class 10' || classVal === 'Class 9') {
+                ['Science', 'Commerce', 'Arts'].forEach(opt => {
+                    const el = document.createElement('option');
+                    el.value = opt;
+                    el.textContent = opt;
+                    sectionSelect.appendChild(el);
+                });
+            } else {
+                ['Section A', 'Section B', 'Section C', 'Section D'].forEach(opt => {
+                    const el = document.createElement('option');
+                    el.value = opt;
+                    el.textContent = opt;
+                    sectionSelect.appendChild(el);
+                });
+            }
+            if (sectionSelect.querySelector(`option[value="${currentSelected}"]`)) {
+                sectionSelect.value = currentSelected;
+            }
+        }
+
+        // Teacher Password Verification: 1234567Siddhanta (trimmed)
+        function verifyTeacherLogin() {
+            const inputVal = document.getElementById('teacherPasswordInput').value.trim();
+            if (inputVal === "1234567Siddhanta") {
+                document.getElementById('teacherLoginCard').classList.add('hidden');
+                document.getElementById('teacherDashboard').classList.remove('hidden');
+                loadAttendanceData();
+                showToast("Teacher panel unlocked successfully.");
+            } else {
+                showToast("Incorrect password. Please try again.");
+            }
+        }
+
+        function logoutTeacher() {
+            document.getElementById('teacherPasswordInput').value = "";
+            document.getElementById('teacherLoginCard').classList.remove('hidden');
+            document.getElementById('teacherDashboard').classList.add('hidden');
+            resetStudentForm();
+            showToast("Teacher panel locked.");
+        }
+
+        // Load & Render Attendance Tables
+        function loadAttendanceData() {
+            const students = JSON.parse(localStorage.getItem('mshs_students')) || [];
+            const attendanceMap = JSON.parse(localStorage.getItem('mshs_attendance')) || {};
+            const selectedDate = document.getElementById('attendanceDatepicker').value || getTodayString();
+            
+            document.getElementById('currentDateDisplay').innerText = selectedDate;
+            const dateRecords = attendanceMap[selectedDate] || {};
+
+            // Render Parent Portal Table
+            const parentTable = document.getElementById('parentStudentTableBody');
+            parentTable.innerHTML = "";
+            if (students.length === 0) {
+                parentTable.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">No student records found.</td></tr>`;
+            } else {
+                students.forEach(s => {
+                    const status = dateRecords[s.id] || 'Absent';
+                    const isPresent = status === 'Present';
+                    const statusBadge = isPresent 
+                        ? `<span class="inline-flex items-center space-x-1.5 bg-brand-50 text-brand-700 px-3 py-1 rounded-full text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-brand-600"></span><span>Present (P)</span></span>`
+                        : `<span class="inline-flex items-center space-x-1.5 bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span>Absent (A)</span></span>`;
+                    
+                    parentTable.innerHTML += `
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="py-3.5 px-3 font-semibold text-slate-900">${s.studentId || '-'}</td>
+                            <td class="py-3.5 px-3 font-medium text-slate-600">${s.roll}</td>
+                            <td class="py-3.5 px-3 font-semibold text-slate-900">${s.name}</td>
+                            <td class="py-3.5 px-3 text-slate-600">${s.classVal}</td>
+                            <td class="py-3.5 px-3 text-slate-600">${s.sectionGroup}</td>
+                            <td class="py-3.5 px-3 text-slate-600">${s.phone}</td>
+                            <td class="py-3.5 px-3">${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Render Teacher Panel Table
+            const teacherTable = document.getElementById('teacherStudentTableBody');
+            teacherTable.innerHTML = "";
+            if (students.length === 0) {
+                teacherTable.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-slate-400">No student records found.</td></tr>`;
+            } else {
+                students.forEach(s => {
+                    const status = dateRecords[s.id] || 'Absent';
+                    const isPresent = status === 'Present';
+                    
+                    teacherTable.innerHTML += `
+                        <tr class="hover:bg-slate-50/80 transition" data-id="${s.id}">
+                            <td class="py-3.5 px-3 font-semibold text-slate-900">${s.studentId || '-'}</td>
+                            <td class="py-3.5 px-3 font-medium text-slate-600">${s.roll}</td>
+                            <td class="py-3.5 px-3 font-semibold text-slate-900">${s.name}</td>
+                            <td class="py-3.5 px-3 text-slate-600">${s.classVal}</td>
+                            <td class="py-3.5 px-3 text-slate-600">${s.sectionGroup}</td>
+                            <td class="py-3.5 px-3 text-slate-600">${s.phone}</td>
+                            <td class="py-3.5 px-3">
+                                <div class="inline-flex rounded-xl p-1 bg-slate-100 space-x-1">
+                                    <button type="button" onclick="setAttendanceStatus('${s.id}', 'Present')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${isPresent ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">P</button>
+                                    <button type="button" onclick="setAttendanceStatus('${s.id}', 'Absent')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${!isPresent ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">A</button>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-3 text-right space-x-1.5">
+                                <button onclick="startEditStudent('${s.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl text-xs font-semibold transition" title="Edit Student">✏️</button>
+                                <button onclick="promptDeleteStudent('${s.id}', '${s.name}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 p-2 rounded-xl text-xs font-semibold transition" title="Remove Student">❌</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Set individual student status
+        function setAttendanceStatus(studentId, status) {
+            const selectedDate = document.getElementById('attendanceDatepicker').value || getTodayString();
+            const attendanceMap = JSON.parse(localStorage.getItem('mshs_attendance')) || {};
+            
+            if (!attendanceMap[selectedDate]) {
+                attendanceMap[selectedDate] = {};
+            }
+            attendanceMap[selectedDate][studentId] = status;
+            localStorage.setItem('mshs_attendance', JSON.stringify(attendanceMap));
+            loadAttendanceData();
+        }
+
+        // Add or Update Student Record
+        function saveStudentRecord() {
+            const studentId = document.getElementById('newStudentId').value.trim();
+            const roll = document.getElementById('newRoll').value.trim();
+            const name = document.getElementById('newName').value.trim();
+            const classVal = document.getElementById('newClass').value;
+            const sectionGroup = document.getElementById('newSectionGroup').value;
+            const phone = document.getElementById('newPhone').value.trim();
+
+            if (!studentId || !roll || !name || !phone) {
+                showToast("Please fill in all student details.");
+                return;
+            }
+
+            let students = JSON.parse(localStorage.getItem('mshs_students')) || [];
+
+            if (editingStudentId) {
+                // Update existing student
+                students = students.map(s => {
+                    if (s.id === editingStudentId) {
+                        return { id: s.id, studentId, roll, name, classVal, sectionGroup, phone };
+                    }
+                    return s;
+                });
+                localStorage.setItem('mshs_students', JSON.stringify(students));
+                showToast("Student updated successfully.");
+                resetStudentForm();
+            } else {
+                // Add new student
+                const newId = Date.now().toString();
+                students.push({ id: newId, studentId, roll, name, classVal, sectionGroup, phone });
+                localStorage.setItem('mshs_students', JSON.stringify(students));
+                
+                document.getElementById('newStudentId').value = "";
+                document.getElementById('newRoll').value = "";
+                document.getElementById('newName').value = "";
+                document.getElementById('newPhone').value = "";
+                showToast("Student registered successfully.");
+            }
+
+            loadAttendanceData();
+        }
+
+        // Start editing student (populate form)
+        function startEditStudent(id) {
+            const students = JSON.parse(localStorage.getItem('mshs_students')) || [];
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+
+            editingStudentId = student.id;
+            document.getElementById('newStudentId').value = student.studentId || '';
+            document.getElementById('newRoll').value = student.roll || '';
+            document.getElementById('newName').value = student.name || '';
+            document.getElementById('newClass').value = student.classVal || 'Class 10';
+            updateSectionDropdown();
+            document.getElementById('newSectionGroup').value = student.sectionGroup || '';
+            document.getElementById('newPhone').value = student.phone || '';
+
+            document.getElementById('formTitleText').innerHTML = `<span>✏️ Edit Student Record</span>`;
+            document.getElementById('submitStudentBtn').innerText = "Update Record";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+
+        function resetStudentForm() {
+            editingStudentId = null;
+            document.getElementById('newStudentId').value = "";
+            document.getElementById('newRoll').value = "";
+            document.getElementById('newName').value = "";
+            document.getElementById('newClass').value = "Class 10";
+            updateSectionDropdown();
+            document.getElementById('newPhone').value = "";
+            document.getElementById('formTitleText').innerHTML = `<span>➕ Add New Student</span>`;
+            document.getElementById('submitStudentBtn').innerText = "Register Student";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        // Custom Modal Confirmation for Student Deletion
+        let studentToDeleteId = null;
+        function promptDeleteStudent(id, name) {
+            studentToDeleteId = id;
+            document.getElementById('confirmModalText').innerText = `Are you sure you want to remove student "${name}"? All related attendance history across all dates will be permanently deleted.`;
+            document.getElementById('customConfirmModal').classList.remove('hidden');
+            document.getElementById('confirmModalYesBtn').onclick = function() {
+                executeDeleteStudent(studentToDeleteId);
+            };
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('customConfirmModal').classList.add('hidden');
+            studentToDeleteId = null;
+        }
+
+        function executeDeleteStudent(id) {
+            let students = JSON.parse(localStorage.getItem('mshs_students')) || [];
+            students = students.filter(s => s.id !== id);
+            localStorage.setItem('mshs_students', JSON.stringify(students));
+
+            let attendanceMap = JSON.parse(localStorage.getItem('mshs_attendance')) || {};
+            for (const date in attendanceMap) {
+                if (attendanceMap[date][id]) {
+                    delete attendanceMap[date][id];
+                }
+            }
+            localStorage.setItem('mshs_attendance', JSON.stringify(attendanceMap));
+
+            if (editingStudentId === id) {
+                resetStudentForm();
+            }
+
+            closeConfirmModal();
+            loadAttendanceData();
+            showToast("Student and associated data removed successfully.");
+        }
+
+        function saveAllAttendance() {
+            showToast("Attendance register saved successfully.");
+            loadAttendanceData();
+        }
+
+        // Parent Search Filter (ID, Roll, Name, Phone)
+        function searchStudentForParent() {
+            const query = document.getElementById('parentSearchInput').value.toLowerCase().trim();
+            const students = JSON.parse(localStorage.getItem('mshs_students')) || [];
+            const attendanceMap = JSON.parse(localStorage.getItem('mshs_attendance')) || {};
+            const selectedDate = document.getElementById('currentDateDisplay').innerText;
+            const dateRecords = attendanceMap[selectedDate] || {};
+
+            const parentTable = document.getElementById('parentStudentTableBody');
+            parentTable.innerHTML = "";
+
+            const filtered = students.filter(s => 
+                s.name.toLowerCase().includes(query) || 
+                s.roll.toLowerCase().includes(query) || 
+                (s.studentId && s.studentId.toLowerCase().includes(query)) ||
+                (s.phone && s.phone.toLowerCase().includes(query))
+            );
+
+            if (filtered.length === 0) {
+                parentTable.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">No matching student record found.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(s => {
+                const status = dateRecords[s.id] || 'Absent';
+                const isPresent = status === 'Present';
+                const statusBadge = isPresent 
+                    ? `<span class="inline-flex items-center space-x-1.5 bg-brand-50 text-brand-700 px-3 py-1 rounded-full text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-brand-600"></span><span>Present (P)</span></span>`
+                    : `<span class="inline-flex items-center space-x-1.5 bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span>Absent (A)</span></span>`;
+                
+                parentTable.innerHTML += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-3 font-semibold text-slate-900">${s.studentId || '-'}</td>
+                        <td class="py-3.5 px-3 font-medium text-slate-600">${s.roll}</td>
+                        <td class="py-3.5 px-3 font-semibold text-slate-900">${s.name}</td>
+                        <td class="py-3.5 px-3 text-slate-600">${s.classVal}</td>
+                        <td class="py-3.5 px-3 text-slate-600">${s.sectionGroup}</td>
+                        <td class="py-3.5 px-3 text-slate-600">${s.phone}</td>
+                        <td class="py-3.5 px-3">${statusBadge}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Toast notification helper
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl z-50 text-xs font-medium fade-in border border-slate-700";
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

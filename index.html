@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirpur Siddhanta High School - Attendance Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f4ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-600 selection:text-white relative">
+
+    <!-- Global Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex flex-col items-center justify-center text-white fade-in">
+        <svg class="animate-spin h-10 w-10 text-brand-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="font-semibold text-lg" id="loadingText">Connecting to Live Database...</p>
+        <p class="text-xs text-slate-300 mt-2 text-center px-4 max-w-sm" id="loadingSubText">Synchronizing live records from Google Sheets. Please wait.</p>
+    </div>
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-brand-900 text-white shadow-md sticky top-0 z-40 border-b border-brand-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3.5">
+                <div class="w-11 h-11 rounded-xl bg-white p-0.5 shadow-sm overflow-hidden flex items-center justify-center border border-brand-700">
+                    <img src="40657.jpg" alt="Mirpur Siddhanta High School Logo" class="w-full h-full object-cover rounded-lg" onerror="this.src='https://placehold.co/100x100/1e3a8a/ffffff?text=MSHS'">
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold tracking-tight">Mirpur Siddhanta High School</h1>
+                    <p class="text-xs text-brand-100 font-medium flex items-center gap-2">
+                        <span>Estd. 1996 • Dhaka-1216</span>
+                        <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border border-emerald-500/30 flex items-center">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span> Live Sync
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <nav class="flex items-center space-x-2 bg-brand-950/60 p-1.5 rounded-xl border border-brand-800">
+                <button onclick="switchTab('parent')" id="btnParentTab" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-brand-900 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span>Parent Portal</span>
+                </button>
+                <button onclick="switchTab('teacher')" id="btnTeacherTab" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-brand-100 hover:text-white hover:bg-brand-800/50 transition-all flex items-center gap-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    <span>Teacher Panel</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <!-- ================= PARENT PORTAL ================= -->
+        <section id="parentSection" class="fade-in space-y-6">
+            
+            <!-- Hero Title Card -->
+            <div class="bg-gradient-to-br from-brand-900 via-brand-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-brand-700 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-2 text-center md:text-left">
+                    <span class="inline-block bg-white/10 text-brand-200 border border-white/20 text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-md">
+                        Mirpur Siddhanta High School • Attendance System
+                    </span>
+                    <h2 class="text-xl sm:text-3xl font-extrabold tracking-tight">Student Attendance Query Panel</h2>
+                    <p class="text-xs sm:text-sm text-brand-200 font-normal">
+                        Search by Name, Roll, Class, Section, or Phone to check live attendance.
+                    </p>
+                </div>
+                <div class="bg-white/10 px-4 py-3 rounded-2xl border border-white/10 text-center min-w-[160px]">
+                    <span class="block text-xs text-brand-200">Current Date</span>
+                    <span id="currentDateDisplay" class="text-sm font-bold text-white mt-0.5 block">--</span>
+                </div>
+            </div>
+
+            <!-- Direct Search Panel Card -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-5">
+                <div class="flex items-center space-x-3 border-b border-slate-100 pb-3">
+                    <div class="w-10 h-10 bg-brand-50 text-brand-700 rounded-2xl flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Unified Student Search</h3>
+                        <p class="text-xs text-slate-400">Search flexible queries (e.g. "Abdur", "7", "Class 10", "Science", "01711")</p>
+                    </div>
+                </div>
+
+                <!-- Search Bar with Search & Reset Buttons -->
+                <div class="space-y-4">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="relative flex-grow">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                            <input type="text" id="parentSearchUnified" placeholder="Type ID, phone, name, roll, class or section..." class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white transition shadow-inner" oninput="performParentSearch()" onkeydown="if(event.key === 'Enter') performParentSearch()">
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="performParentSearch()" class="flex-1 sm:flex-none bg-brand-600 hover:bg-brand-700 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-md flex items-center justify-center space-x-2 cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <span>Search</span>
+                            </button>
+                            <button onclick="resetParentSearch()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition cursor-pointer">
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Button directly below search bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <button onclick="openDirectCheckModal()" class="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-600/20 flex items-center justify-center space-x-2.5 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                            <span>Advanced Search / Filter Dialog</span>
+                        </button>
+                        <p class="text-xs text-slate-400">Click to open direct filter dialog by Name, Roll, Class, Section</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Result Table Card -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-wrap justify-between items-center pb-3 border-b border-slate-100 gap-2">
+                    <div class="flex items-center space-x-2">
+                        <h3 class="text-base sm:text-lg font-bold text-slate-900">Attendance Search Results</h3>
+                        <span id="searchResultCount" class="bg-brand-50 text-brand-700 text-xs font-bold px-3 py-1 rounded-full border border-brand-100">Total: 0 Student(s)</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Powered by Google Sheets Live Database</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                                <th class="py-3.5 px-3">Student ID</th>
+                                <th class="py-3.5 px-3">Phone</th>
+                                <th class="py-3.5 px-3">Student Name</th>
+                                <th class="py-3.5 px-3">Shift</th>
+                                <th class="py-3.5 px-3">Class</th>
+                                <th class="py-3.5 px-3">Section / Group</th>
+                                <th class="py-3.5 px-3">Roll</th>
+                                <th class="py-3.5 px-3">Today Status</th>
+                                <th class="py-3.5 px-3 text-center">Yearly Report</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parentStudentTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Dynamically generated rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= TEACHER PANEL ================= -->
+        <section id="teacherSection" class="hidden fade-in space-y-6">
+            
+            <!-- Login Card -->
+            <div id="teacherLoginCard" class="max-w-md mx-auto bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-slate-200 mt-8">
+                <div class="text-center space-y-2 mb-8">
+                    <div class="inline-flex bg-brand-50 text-brand-700 p-4 rounded-2xl mb-1 shadow-sm">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                    </div>
+                    <h2 class="text-2xl font-bold text-slate-900">Teacher Panel Login</h2>
+                    <p class="text-xs text-slate-400">Enter access password to unlock admin dashboard</p>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">Password</label>
+                        <input type="password" id="teacherPasswordInput" placeholder="Enter password..." class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-600 focus:bg-white text-sm transition" onkeydown="if(event.key === 'Enter') verifyTeacherLogin()">
+                    </div>
+                    <button onclick="verifyTeacherLogin()" class="w-full bg-brand-600 hover:bg-brand-700 active:scale-95 text-white py-3.5 rounded-2xl text-sm font-semibold transition shadow-md cursor-pointer">Unlock Dashboard</button>
+                </div>
+            </div>
+
+            <!-- Teacher Dashboard -->
+            <div id="teacherDashboard" class="hidden space-y-6">
+                <!-- Control Header Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-brand-50 text-brand-700 rounded-2xl flex items-center justify-center font-bold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900">Attendance Management</h3>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-xs text-slate-400">Select Date:</span>
+                                <input type="date" id="attendanceDatepicker" onchange="renderUI()" class="text-xs bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-600">
+                                <span id="syncStatusBadge" class="bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                    <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                    <span>Ready</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="fetchData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-2xl text-xs font-bold transition shadow-md flex items-center space-x-1.5 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span>Sync Data</span>
+                        </button>
+                        <button onclick="saveAttendanceToCloud()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-2xl text-xs font-bold transition shadow-md flex items-center space-x-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                            <span>Save Attendance to Cloud</span>
+                        </button>
+                        <button onclick="logoutTeacher()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-2xl text-xs font-semibold transition cursor-pointer">Logout</button>
+                    </div>
+                </div>
+
+                <!-- Add/Edit Student Form Card -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h4 class="text-base font-bold text-slate-900 flex items-center gap-2" id="formTitleText">
+                            <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span>Add New Student</span>
+                        </h4>
+                        <button id="cancelEditBtn" onclick="resetStudentForm()" class="hidden text-xs text-rose-600 hover:underline font-semibold">Cancel Edit</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Student ID (Optional)</label>
+                            <input type="text" id="newStudentId" placeholder="Auto-generated if empty" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Guardian Phone</label>
+                            <input type="text" id="newPhone" placeholder="01710000000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Student Name *</label>
+                            <input type="text" id="newName" placeholder="Full Student Name" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Shift</label>
+                            <select id="newShift" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-600">
+                                <option value="Morning">Morning</option>
+                                <option value="Day">Day</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Class</label>
+                            <select id="newClass" onchange="updateSectionDropdown()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-600">
+                                <option value="Play">Play</option>
+                                <option value="Nursery">Nursery</option>
+                                <option value="KG">KG</option>
+                                <option value="Class 1">Class 1</option>
+                                <option value="Class 2">Class 2</option>
+                                <option value="Class 3">Class 3</option>
+                                <option value="Class 4">Class 4</option>
+                                <option value="Class 5">Class 5</option>
+                                <option value="Class 6">Class 6</option>
+                                <option value="Class 7">Class 7</option>
+                                <option value="Class 8">Class 8</option>
+                                <option value="Class 9">Class 9</option>
+                                <option value="Class 10" selected>Class 10</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Section / Group</label>
+                            <select id="newSectionGroup" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-600">
+                                <option value="Science">Science</option>
+                                <option value="Commerce">Commerce</option>
+                                <option value="Arts">Arts</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Roll Number *</label>
+                            <input type="text" id="newRoll" placeholder="e.g. 7" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-600">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="saveStudentToCloud()" id="submitStudentBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl text-xs font-bold transition shadow-md cursor-pointer">Save Student Record</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student List for Attendance Card -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-4">
+                    <h4 class="text-base font-bold text-slate-900 pb-2 border-b border-slate-100">Student Roster & Attendance Controls</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                                    <th class="py-3.5 px-3">Student ID</th>
+                                    <th class="py-3.5 px-3">Phone</th>
+                                    <th class="py-3.5 px-3">Student Name</th>
+                                    <th class="py-3.5 px-3">Shift</th>
+                                    <th class="py-3.5 px-3">Class</th>
+                                    <th class="py-3.5 px-3">Section / Group</th>
+                                    <th class="py-3.5 px-3">Roll</th>
+                                    <th class="py-3.5 px-3">Mark Attendance (P/A/B)</th>
+                                    <th class="py-3.5 px-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacherStudentTableBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamically populated rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- DIRECT CHECK INPUT MODAL -->
+    <div id="directCheckModal" class="hidden fixed inset-0 w-screen h-screen bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-5 shadow-2xl border border-slate-200 fade-in relative my-auto">
+            <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                <div>
+                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider">Quick Search Dialog</span>
+                    <h3 class="text-xl font-bold text-slate-900 mt-1.5">Check Yearly Attendance</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Enter details below to generate individual attendance report</p>
+                </div>
+                <button onclick="closeDirectCheckModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 leading-none cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Student Name</label>
+                    <input type="text" id="modalSearchName" placeholder="e.g. Abdur Rahman" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white transition" onkeydown="if(event.key === 'Enter') submitDirectCheckForm()">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Roll Number</label>
+                    <input type="text" id="modalSearchRoll" placeholder="e.g. 7" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white transition" onkeydown="if(event.key === 'Enter') submitDirectCheckForm()">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Class</label>
+                    <input type="text" id="modalSearchClass" list="modalClassListOptions" placeholder="e.g. Class 10" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white transition" onkeydown="if(event.key === 'Enter') submitDirectCheckForm()">
+                    <datalist id="modalClassListOptions">
+                        <option value="Play"></option>
+                        <option value="Nursery"></option>
+                        <option value="KG"></option>
+                        <option value="Class 1"></option>
+                        <option value="Class 2"></option>
+                        <option value="Class 3"></option>
+                        <option value="Class 4"></option>
+                        <option value="Class 5"></option>
+                        <option value="Class 6"></option>
+                        <option value="Class 7"></option>
+                        <option value="Class 8"></option>
+                        <option value="Class 9"></option>
+                        <option value="Class 10"></option>
+                    </datalist>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Section / Group</label>
+                    <input type="text" id="modalSearchSection" list="modalSectionListOptions" placeholder="e.g. Science" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white transition" onkeydown="if(event.key === 'Enter') submitDirectCheckForm()">
+                    <datalist id="modalSectionListOptions">
+                        <option value="Science"></option>
+                        <option value="Commerce"></option>
+                        <option value="Arts"></option>
+                        <option value="Section A"></option>
+                        <option value="Section B"></option>
+                        <option value="Section C"></option>
+                        <option value="Section D"></option>
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                <button onclick="closeDirectCheckModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-2xl text-xs font-semibold transition cursor-pointer">Cancel</button>
+                <button onclick="submitDirectCheckForm()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-md flex items-center space-x-1.5 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span>View Report</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YEARLY ATTENDANCE DETAIL MODAL -->
+    <div id="yearlyReportModal" class="hidden fixed inset-0 w-screen h-screen bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full space-y-6 shadow-2xl border border-slate-200 fade-in relative max-h-[90vh] overflow-y-auto my-auto">
+            
+            <div class="flex justify-between items-start border-b border-slate-100 pb-4">
+                <div>
+                    <span class="bg-brand-50 text-brand-700 border border-brand-100 text-[10px] px-3 py-1 rounded-full uppercase font-bold tracking-wider">Yearly Attendance Report</span>
+                    <h3 class="text-xl font-bold text-slate-900 mt-2" id="modalStudentName">Student Name</h3>
+                    <p class="text-xs text-slate-500 mt-0.5" id="modalStudentMeta">ID: - | Phone: - | Shift: - | Class: - | Section: - | Roll: -</p>
+                </div>
+                <button onclick="closeYearlyReportModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 leading-none cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Stats Visual Container -->
+            <div class="bg-gradient-to-br from-brand-900 via-brand-800 to-slate-900 text-white p-6 rounded-2xl shadow-inner space-y-5">
+                <div class="flex items-center justify-between pb-4 border-b border-brand-700/60">
+                    <span class="text-xs text-brand-200 font-medium">Annual Attendance Analytics</span>
+                    <div class="text-right">
+                        <span class="text-2xl font-black text-green-400 block" id="modalPresentPercent">0%</span>
+                        <span class="text-[10px] uppercase font-semibold text-brand-200">Attendance Rate</span>
+                    </div>
+                </div>
+
+                <!-- Breakdown Stats Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-900">
+                    <div class="bg-white rounded-xl p-3 text-center shadow-sm">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase block">Total Days</span>
+                        <span class="text-xl font-black text-slate-900 mt-0.5 block" id="modalStatTotal">0</span>
+                    </div>
+                    <div class="bg-emerald-50 rounded-xl p-3 text-center border border-emerald-100 shadow-sm">
+                        <span class="text-[10px] font-bold text-emerald-600 uppercase block">Present (P)</span>
+                        <span class="text-xl font-black text-emerald-800 mt-0.5 block" id="modalStatPresent">0</span>
+                    </div>
+                    <div class="bg-rose-50 rounded-xl p-3 text-center border border-rose-100 shadow-sm">
+                        <span class="text-[10px] font-bold text-rose-600 uppercase block">Absent (A)</span>
+                        <span class="text-xl font-black text-rose-800 mt-0.5 block" id="modalStatAbsent">0</span>
+                    </div>
+                    <div class="bg-amber-50 rounded-xl p-3 text-center border border-amber-100 shadow-sm">
+                        <span class="text-[10px] font-bold text-amber-600 uppercase block">Bunked (B)</span>
+                        <span class="text-xl font-black text-amber-800 mt-0.5 block" id="modalStatBunked">0</span>
+                    </div>
+                </div>
+
+                <!-- Attendance Progress Bar -->
+                <div class="pt-1">
+                    <div class="flex justify-between text-xs font-medium text-brand-200 mb-1">
+                        <span>Attendance Progress</span>
+                        <span id="modalProgressLabel">0 / 0 Days</span>
+                    </div>
+                    <div class="w-full bg-brand-950/80 rounded-full h-3 p-0.5 overflow-hidden">
+                        <div id="modalProgressBar" class="bg-gradient-to-r from-emerald-400 to-green-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <button onclick="closeYearlyReportModal()" class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-2xl text-xs font-semibold transition cursor-pointer">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM CONFIRMATION MODAL -->
+    <div id="customConfirmModal" class="hidden fixed inset-0 w-screen h-screen bg-slate-950/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200 fade-in my-auto">
+            <div class="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">Delete Student Record?</h3>
+            <p id="confirmModalText" class="text-sm text-slate-500">Are you sure you want to delete this student? This action will also remove the record from Google Sheets.</p>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-2xl text-xs font-semibold transition cursor-pointer">Cancel</button>
+                <button id="confirmModalYesBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-2xl text-xs font-semibold transition cursor-pointer">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-auto text-center text-xs text-slate-500">
+        <p>&copy; 2026 Mirpur Siddhanta High School. Database Powered by Google Sheets Web App.</p>
+    </footer>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        // Google Apps Script Deployment Web App URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyasQi9o47HfMhM5FT-8qpkGFUI25n-sPnu9UGDI9Z6rJr1Q6i79RH8ZKU7QUSBLk0G/exec"; 
+        
+        let globalStudents = [];
+        let globalAttendance = {};
+        let editingStudentId = null;
+        let pendingDeleteId = null;
+
+        // Number Mapping & Bengali Normalization Engine
+        const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        const wordNumberMap = {
+            "এক": "1", "one": "1",
+            "দুই": "2", "two": "2",
+            "তিন": "3", "three": "3",
+            "চার": "4", "four": "4",
+            "পাঁচ": "5", "five": "5",
+            "ছয়": "6", "six": "6",
+            "সাত": "7", "seven": "7",
+            "আট": "8", "eight": "8",
+            "নয়": "9", "nine": "9",
+            "দশ": "10", "ten": "10",
+            "প্লে": "play",
+            "নার্সারি": "nursery",
+            "কেজি": "kg"
+        };
+
+        function normalizeSearchText(str) {
+            if (!str) return "";
+            let s = String(str).toLowerCase().trim();
+            s = s.replace(/[০-৯]/g, d => bnDigits.indexOf(d));
+            
+            for (let word in wordNumberMap) {
+                let val = wordNumberMap[word];
+                s = s.replace(new RegExp(`\\b${word}\\b`, 'gi'), val);
+            }
+            return s;
+        }
+
+        function matchStudent(student, rawQuery) {
+            if (!rawQuery) return true;
+            
+            let queryNorm = normalizeSearchText(rawQuery);
+            let queryTokens = queryNorm.split(/\s+/).filter(t => t.length > 0);
+            if (queryTokens.length === 0) return true;
+
+            let nameNorm = normalizeSearchText(student.name);
+            let rollNorm = normalizeSearchText(student.roll);
+            let classNorm = normalizeSearchText(student.classVal);
+            let secNorm = normalizeSearchText(student.sectionGroup);
+            let shiftNorm = normalizeSearchText(student.shift);
+            let idNorm = normalizeSearchText(student.studentId || student.id);
+            let phoneNorm = normalizeSearchText(student.phone);
+
+            let rawClassNum = classNorm.replace(/^class\s*/i, '').trim();
+
+            return queryTokens.every(token => {
+                if (token === "class") return classNorm.includes("class");
+                let cleanToken = token.replace(/^class\s*/i, '').trim();
+
+                return (
+                    nameNorm.includes(token) ||
+                    rollNorm === token ||
+                    rollNorm.includes(token) ||
+                    classNorm.includes(token) ||
+                    (cleanToken && rawClassNum === cleanToken) ||
+                    secNorm.includes(token) ||
+                    shiftNorm.includes(token) ||
+                    idNorm.includes(token) ||
+                    phoneNorm.includes(token)
+                );
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        function initApp() {
+            const today = getTodayString();
+            const datePicker = document.getElementById('attendanceDatepicker');
+            if (datePicker) {
+                datePicker.value = today;
+            }
+            const dateDisplay = document.getElementById('currentDateDisplay');
+            if (dateDisplay) {
+                dateDisplay.innerText = today;
+            }
+
+            setTimeout(() => {
+                hideLoading();
+            }, 7000);
+
+            fetchData();
+        }
+
+        function getTodayString() {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function normalizeDateStr(v) {
+            if (!v) return getTodayString();
+            return v.split('T')[0].trim();
+        }
+
+        async function sendApiRequest(action, payloadData = {}) {
+            try {
+                const bodyObj = { action, ...payloadData };
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
+                    body: JSON.stringify(bodyObj),
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (e) {
+                console.warn("POST Request fallback to GET:", e);
+                try {
+                    let getUrl = SCRIPT_URL + "?action=" + encodeURIComponent(action);
+                    if (action === "saveStudent") {
+                        getUrl += "&student=" + encodeURIComponent(JSON.stringify(payloadData.student || {}));
+                    } else if (action === "saveAttendance") {
+                        getUrl += "&date=" + encodeURIComponent(payloadData.date || "") + "&records=" + encodeURIComponent(JSON.stringify(payloadData.records || {}));
+                    } else if (action === "deleteStudent") {
+                        getUrl += "&id=" + encodeURIComponent(payloadData.id || "");
+                    }
+                    const resGet = await fetch(getUrl);
+                    return await resGet.json();
+                } catch (errGet) {
+                    return { status: "error", message: errGet.message };
+                }
+            }
+        }
+
+        async function fetchData() {
+            showLoading("Connecting to Google Sheets Live Database...", "Fetching real-time records. Please wait.");
+            
+            try {
+                const res = await sendApiRequest("getData");
+                if (res && res.status === "success" && res.data) {
+                    if (res.data.students && Array.isArray(res.data.students)) {
+                        globalStudents = res.data.students.map(s => ({
+                            id: (s.id || s.studentId || "").toString().trim(),
+                            studentId: (s.studentId || s.id || "").toString().trim(),
+                            name: (s.name || "").toString().trim(),
+                            classVal: (s.classVal || s.class || "Class 10").toString().trim(),
+                            sectionGroup: (s.sectionGroup || s.section || "Science").toString().trim(),
+                            roll: (s.roll || "").toString().trim(),
+                            shift: (s.shift || "Morning").toString().trim(),
+                            phone: (s.phone || "").toString().trim()
+                        }));
+                    }
+                    globalAttendance = res.data.attendance || {};
+                    showToast("Database loaded successfully from Google Sheets!");
+                } else {
+                    throw new Error(res.message || "Invalid response payload");
+                }
+            } catch (err) {
+                console.warn("Google Sheets connection error:", err);
+                showToast("Data Sync Error! Check your Script URL.");
+            } finally {
+                hideLoading();
+                renderUI();
+                performParentSearch();
+            }
+        }
+
+        function getStudentStatus(student, dateRecords) {
+            const targetId = student.id || student.studentId;
+            const altId = student.studentId || student.id;
+            return dateRecords[targetId] || dateRecords[altId] || 'Absent';
+        }
+
+        function performParentSearch() {
+            const query = (document.getElementById('parentSearchUnified')?.value || "").trim();
+            const rawDate = document.getElementById('attendanceDatepicker')?.value || getTodayString();
+            const selectedDate = normalizeDateStr(rawDate);
+            const dateRecords = globalAttendance[selectedDate] || {};
+
+            const filtered = globalStudents.filter(s => matchStudent(s, query));
+
+            const parentTable = document.getElementById('parentStudentTableBody');
+            const countDisplay = document.getElementById('searchResultCount');
+            
+            if (countDisplay) {
+                countDisplay.innerText = `Total: ${filtered.length} Student(s)`;
+            }
+
+            if (!parentTable) return filtered;
+            parentTable.innerHTML = "";
+
+            if (filtered.length === 0) {
+                parentTable.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="py-12 text-center text-slate-400">
+                            <div class="flex justify-center mb-2">
+                                <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                            <p class="font-semibold text-slate-600">No student records found</p>
+                            <p class="text-xs text-slate-400 mt-1">Try searching by student ID, phone, name, roll, class, or section again.</p>
+                        </td>
+                    </tr>
+                `;
+                return filtered;
+            }
+
+            let rowsHTML = "";
+            filtered.forEach(s => {
+                const status = getStudentStatus(s, dateRecords);
+                const isPresent = status === 'Present';
+                const isBunked = status === 'Bunked';
+
+                let statusBadge = "";
+                if (isPresent) {
+                    statusBadge = `<span class="inline-flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Present</span></span>`;
+                } else if (isBunked) {
+                    statusBadge = `<span class="inline-flex items-center space-x-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>Bunked</span></span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center space-x-1.5 bg-rose-50 text-rose-700 px-3 py-1 rounded-full text-xs font-semibold border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span><span>Absent</span></span>`;
+                }
+                
+                const uniqueId = s.id || s.studentId;
+                rowsHTML += `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3.5 px-3 font-semibold text-slate-900">${s.studentId || '-'}</td>
+                        <td class="py-3.5 px-3 text-slate-600 font-mono text-xs">${s.phone || '-'}</td>
+                        <td class="py-3.5 px-3 font-semibold text-slate-900">${s.name || '-'}</td>
+                        <td class="py-3.5 px-3 text-slate-600">${s.shift || 'Morning'}</td>
+                        <td class="py-3.5 px-3 text-slate-600">${s.classVal || '-'}</td>
+                        <td class="py-3.5 px-3 text-slate-600">${s.sectionGroup || '-'}</td>
+                        <td class="py-3.5 px-3 font-medium text-slate-700">${s.roll || '-'}</td>
+                        <td class="py-3.5 px-3">${statusBadge}</td>
+                        <td class="py-3.5 px-3 text-center">
+                            <button onclick="viewStudentYearlyReport('${uniqueId}')" class="bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs px-3.5 py-2 rounded-xl font-bold transition shadow-sm inline-flex items-center space-x-1.5 cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                <span>Report</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            parentTable.innerHTML = rowsHTML;
+        }
+
+        function resetParentSearch() {
+            const input = document.getElementById('parentSearchUnified');
+            if (input) input.value = "";
+            performParentSearch();
+        }
+
+        function viewStudentYearlyReport(id) {
+            const student = globalStudents.find(s => s.id == id || s.studentId == id);
+            if (!student) {
+                showToast("Student record not found!");
+                return;
+            }
+
+            let totalDays = 0, presentDays = 0, absentDays = 0, bunkedDays = 0;
+            const targetId = student.id || student.studentId;
+            const altId = student.studentId || student.id;
+
+            for (let date in globalAttendance) {
+                const dayRecord = globalAttendance[date];
+                if (dayRecord && (dayRecord[targetId] !== undefined || dayRecord[altId] !== undefined)) {
+                    totalDays++;
+                    const status = dayRecord[targetId] || dayRecord[altId];
+                    if (status === 'Present') presentDays++;
+                    else if (status === 'Bunked') bunkedDays++;
+                    else absentDays++;
+                }
+            }
+
+            const presentPercent = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+
+            document.getElementById('modalStudentName').innerText = student.name || 'Student Name';
+            document.getElementById('modalStudentMeta').innerText = `ID: ${student.studentId || '-'} | Phone: ${student.phone || '-'} | Shift: ${student.shift || 'Morning'} | Class: ${student.classVal || '-'} | Section: ${student.sectionGroup || '-'} | Roll: ${student.roll || '-'}`;
+            
+            document.getElementById('modalPresentPercent').innerText = `${presentPercent}%`;
+            document.getElementById('modalStatTotal').innerText = totalDays;
+            document.getElementById('modalStatPresent').innerText = presentDays;
+            document.getElementById('modalStatAbsent').innerText = absentDays;
+            document.getElementById('modalStatBunked').innerText = bunkedDays;
+
+            document.getElementById('modalProgressLabel').innerText = `${presentDays} / ${totalDays} Days Present`;
+            document.getElementById('modalProgressBar').style.width = `${presentPercent}%`;
+
+            document.getElementById('yearlyReportModal').classList.remove('hidden');
+        }
+
+        function closeYearlyReportModal() {
+            document.getElementById('yearlyReportModal').classList.add('hidden');
+        }
+
+        function openDirectCheckModal() {
+            document.getElementById('directCheckModal').classList.remove('hidden');
+        }
+
+        function closeDirectCheckModal() {
+            document.getElementById('directCheckModal').classList.add('hidden');
+        }
+
+        function submitDirectCheckForm() {
+            const nameInput = document.getElementById('modalSearchName').value;
+            const rollInput = document.getElementById('modalSearchRoll').value;
+            const classInput = document.getElementById('modalSearchClass').value;
+            const secInput = document.getElementById('modalSearchSection').value;
+
+            const found = globalStudents.find(s => {
+                const matchesName = !nameInput || matchStudent(s, nameInput);
+                const matchesRoll = !rollInput || matchStudent(s, rollInput);
+                const matchesClass = !classInput || matchStudent(s, classInput);
+                const matchesSec = !secInput || matchStudent(s, secInput);
+                return matchesName && matchesRoll && matchesClass && matchesSec;
+            });
+
+            if (found) {
+                closeDirectCheckModal();
+                viewStudentYearlyReport(found.id || found.studentId);
+            } else {
+                showToast("No student matching direct check criteria.");
+            }
+        }
+
+        function verifyTeacherLogin() {
+            const pwd = document.getElementById('teacherPasswordInput').value;
+            if (pwd === "1234567siddhanta") {
+                document.getElementById('teacherLoginCard').classList.add('hidden');
+                document.getElementById('teacherDashboard').classList.remove('hidden');
+                renderUI();
+                showToast("Teacher Dashboard Unlocked");
+            } else {
+                showToast("Incorrect Password! Access Denied.");
+            }
+        }
+
+        function logoutTeacher() {
+            document.getElementById('teacherDashboard').classList.add('hidden');
+            document.getElementById('teacherLoginCard').classList.remove('hidden');
+            document.getElementById('teacherPasswordInput').value = "";
+            showToast("Teacher Logged Out");
+        }
+
+        function updateSectionDropdown() {
+            const selectedClass = document.getElementById('newClass').value;
+            const sectionSelect = document.getElementById('newSectionGroup');
+            
+            if (selectedClass.includes("9") || selectedClass.includes("10")) {
+                sectionSelect.innerHTML = `
+                    <option value="Science">Science</option>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Arts">Arts</option>
+                `;
+            } else {
+                sectionSelect.innerHTML = `
+                    <option value="Section A">Section A</option>
+                    <option value="Section B">Section B</option>
+                    <option value="Section C">Section C</option>
+                    <option value="Section D">Section D</option>
+                `;
+            }
+        }
+
+        async function saveStudentToCloud() {
+            const rollVal = document.getElementById('newRoll').value.trim();
+            const nameVal = document.getElementById('newName').value.trim();
+
+            if (!rollVal || !nameVal) {
+                showToast("Roll Number and Student Name are required!");
+                return;
+            }
+
+            const rawId = document.getElementById('newStudentId').value.trim();
+            const autoId = editingStudentId || rawId || ("MSHS-" + Date.now().toString().slice(-4));
+
+            const studentObj = {
+                id: autoId,
+                studentId: rawId || autoId,
+                roll: rollVal,
+                name: nameVal,
+                classVal: document.getElementById('newClass').value,
+                sectionGroup: document.getElementById('newSectionGroup').value,
+                shift: document.getElementById('newShift').value,
+                phone: document.getElementById('newPhone').value.trim()
+            };
+
+            showLoading("Saving Student to Google Sheets...", "Updating live spreadsheet...");
+            const res = await sendApiRequest("saveStudent", { student: studentObj });
+            hideLoading();
+
+            if (res && res.status === "success") {
+                showToast("Student Record Saved Successfully!");
+                resetStudentForm();
+                fetchData();
+            } else {
+                showToast("Error saving student to Google Sheets: " + (res.message || "Unknown error"));
+            }
+        }
+
+        function editStudent(id) {
+            const s = globalStudents.find(st => st.id == id || st.studentId == id);
+            if (!s) return;
+
+            editingStudentId = s.id || s.studentId;
+            document.getElementById('newStudentId').value = s.studentId || s.id || '';
+            document.getElementById('newRoll').value = s.roll || '';
+            document.getElementById('newName').value = s.name || '';
+            document.getElementById('newClass').value = s.classVal || 'Class 10';
+            
+            updateSectionDropdown();
+            document.getElementById('newSectionGroup').value = s.sectionGroup || 'Science';
+            document.getElementById('newShift').value = s.shift || 'Morning';
+            document.getElementById('newPhone').value = s.phone || '';
+
+            document.getElementById('formTitleText').innerHTML = `
+                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span>Edit Student Record</span>
+            `;
+            document.getElementById('submitStudentBtn').innerText = "Update Student Record";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            window.scrollTo({ top: document.getElementById('teacherSection').offsetTop - 20, behavior: 'smooth' });
+        }
+
+        function resetStudentForm() {
+            editingStudentId = null;
+            ['newStudentId', 'newRoll', 'newName', 'newPhone'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            document.getElementById('formTitleText').innerHTML = `
+                <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Add New Student</span>
+            `;
+            document.getElementById('submitStudentBtn').innerText = "Save Student Record";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        function deleteStudent(id) {
+            const s = globalStudents.find(st => st.id == id || st.studentId == id);
+            if (!s) return;
+
+            pendingDeleteId = id;
+            document.getElementById('confirmModalText').innerText = `Are you sure you want to delete ${s.name || 'this student'} (Roll: ${s.roll || '-'})? This action will remove the record from Google Sheets.`;
+            
+            const yesBtn = document.getElementById('confirmModalYesBtn');
+            yesBtn.onclick = async () => {
+                closeConfirmModal();
+                showLoading("Deleting Student...", "Removing row from Google Sheets...");
+                const res = await sendApiRequest("deleteStudent", { id: pendingDeleteId });
+                hideLoading();
+                if (res && res.status === "success") {
+                    showToast("Student deleted successfully.");
+                    fetchData();
+                } else {
+                    showToast("Failed to delete student: " + (res.message || "Unknown error"));
+                }
+            };
+
+            document.getElementById('customConfirmModal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('customConfirmModal').classList.add('hidden');
+            pendingDeleteId = null;
+        }
+
+        function setAttendanceStatus(id, status) {
+            const dateVal = normalizeDateStr(document.getElementById('attendanceDatepicker').value);
+            if (!globalAttendance[dateVal]) globalAttendance[dateVal] = {};
+
+            globalAttendance[dateVal][id] = status;
+
+            const badge = document.getElementById('syncStatusBadge');
+            if (badge) {
+                badge.className = "bg-amber-100 text-amber-800 border border-amber-200 text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1";
+                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span><span>Unsaved Changes</span>`;
+            }
+
+            renderUI();
+            performParentSearch();
+        }
+
+        async function saveAttendanceToCloud() {
+            const dateVal = normalizeDateStr(document.getElementById('attendanceDatepicker').value);
+            const records = globalAttendance[dateVal] || {};
+
+            showLoading("Saving Attendance to Cloud...", `Syncing attendance for ${dateVal}`);
+            const res = await sendApiRequest("saveAttendance", { date: dateVal, records: records });
+            hideLoading();
+
+            if (res && res.status === "success") {
+                showToast("Attendance Saved to Google Sheets!");
+                const badge = document.getElementById('syncStatusBadge');
+                if (badge) {
+                    badge.className = "bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1";
+                    badge.innerHTML = `<svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg><span>Synced</span>`;
+                }
+            } else {
+                showToast("Failed to save attendance: " + (res.message || "Unknown error"));
+            }
+        }
+
+        function renderUI() {
+            const tbody = document.getElementById('teacherStudentTableBody');
+            if (!tbody) return;
+
+            const dateVal = normalizeDateStr(document.getElementById('attendanceDatepicker').value);
+            const dateRecords = globalAttendance[dateVal] || {};
+
+            if (globalStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">No student records available. Add a student using the form above.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = globalStudents.map(s => {
+                const uniqueId = s.id || s.studentId;
+                const status = getStudentStatus(s, dateRecords);
+
+                const isP = status === 'Present';
+                const isA = status === 'Absent';
+                const isB = status === 'Bunked';
+
+                return `
+                <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition">
+                    <td class="py-3 px-3 text-xs font-mono font-semibold text-slate-800">${s.studentId || '-'}</td>
+                    <td class="py-3 px-3 text-xs text-slate-600 font-mono">${s.phone || '-'}</td>
+                    <td class="py-3 px-3 font-semibold text-xs text-slate-900">${s.name || '-'}</td>
+                    <td class="py-3 px-3 text-xs text-slate-600">${s.shift || 'Morning'}</td>
+                    <td class="py-3 px-3 text-xs text-slate-600">${s.classVal || '-'}</td>
+                    <td class="py-3 px-3 text-xs text-slate-600">${s.sectionGroup || '-'}</td>
+                    <td class="py-3 px-3 text-xs font-bold text-slate-900">${s.roll || '-'}</td>
+                    <td class="py-3 px-3">
+                        <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200 gap-1">
+                            <button onclick="setAttendanceStatus('${uniqueId}', 'Present')" class="px-3 py-1 text-xs rounded-lg font-bold transition ${isP ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}">P</button>
+                            <button onclick="setAttendanceStatus('${uniqueId}', 'Absent')" class="px-3 py-1 text-xs rounded-lg font-bold transition ${isA ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}">A</button>
+                            <button onclick="setAttendanceStatus('${uniqueId}', 'Bunked')" class="px-3 py-1 text-xs rounded-lg font-bold transition ${isB ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}">B</button>
+                        </div>
+                    </td>
+                    <td class="py-3 px-3 text-right space-x-1.5">
+                        <button onclick="editStudent('${uniqueId}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-brand-700 font-semibold px-3 py-1.5 rounded-lg transition">Edit</button>
+                        <button onclick="deleteStudent('${uniqueId}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-1.5 rounded-lg transition">Delete</button>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function switchTab(tab) {
+            document.getElementById('parentSection').classList.toggle('hidden', tab !== 'parent');
+            document.getElementById('teacherSection').classList.toggle('hidden', tab !== 'teacher');
+
+            const btnP = document.getElementById('btnParentTab');
+            const btnT = document.getElementById('btnTeacherTab');
+
+            if (tab === 'parent') {
+                btnP.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-brand-900 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer";
+                btnT.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-brand-100 hover:text-white hover:bg-brand-800/50 transition-all flex items-center gap-1.5 cursor-pointer";
+            } else {
+                btnT.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold bg-white text-brand-900 shadow-sm transition-all flex items-center gap-1.5 cursor-pointer";
+                btnP.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-brand-100 hover:text-white hover:bg-brand-800/50 transition-all flex items-center gap-1.5 cursor-pointer";
+            }
+        }
+
+        function showLoading(text, subtext = "") {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                document.getElementById('loadingText').innerText = text;
+                document.getElementById('loadingSubText').innerText = subtext;
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function showToast(message) {
+            const el = document.createElement('div');
+            el.className = "fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold z-[200] fade-in border border-slate-700 flex items-center space-x-2";
+            el.innerHTML = `
+                <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3200);
+        }
+    </script>
+</body>
+</html>
